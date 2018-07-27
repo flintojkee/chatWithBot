@@ -2,8 +2,6 @@ const chatPage = document.getElementById("chat-page");
 const loginPage = document.getElementById("login-page");
 const socket = io.connect();
 let userName, userNickname;
-
-
 function main() {
     const userHeader = document.getElementById('userHeader');
     const nameButton = document.getElementById('nameButton');
@@ -154,7 +152,7 @@ let validator = {
                 obj.classList.add("mention");
             }
             if(isBotCommand(value.text)){
-
+                socket.emit('bot message', value.text);
             }
         }
         obj.innerHTML = value.name + ": " + value.text;
