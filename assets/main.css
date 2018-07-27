@@ -1,0 +1,76 @@
+ul{
+    padding: 0;
+    overflow-y: scroll;
+    max-height: 100%;
+    list-style-type:none;
+}
+
+#messages li:nth-child(even) {
+    background-color: #f2f2f2
+}
+
+#messages-container{
+    height: 500px;
+    padding-bottom: 20px;
+}
+#messages{
+    height: 450px;
+}
+.channelInputArea {
+    margin: 0 0 50px;
+}
+.innerInputArea {
+    display: flex;
+    flex-direction: row;
+    margin-left: 20px;
+    margin-right: 20px;
+    border-radius: 5px;
+    height: auto;
+    background-color: rgba(178, 189, 197, 0.51);
+}
+#text{
+    background-color: transparent;
+    border: none;
+    font-size: 1.7rem;
+    font-weight: 400;
+    margin: 2px 2px 2px 0;
+    padding: 10px 20px 10px 20px;
+    max-height: 144px;
+    min-height: 20px;
+    resize: none;
+    width: 100%;
+}
+#text::placeholder {
+    opacity: 0.4;
+}
+
+.scrollbar::-webkit-scrollbar-track {
+    -webkit-box-shadow: inset 0 0 6px rgba(0, 0, 0, 0);
+    background-color: rgba(245, 245, 245, 0);
+}
+
+.scrollbar::-webkit-scrollbar {
+    width: 10px;
+    background-color: rgba(245, 245, 245, 0);
+}
+
+.scrollbar::-webkit-scrollbar-thumb {
+    border-radius: 10px;
+    background: #6c757d;
+    opacity: 0.2;
+}
+
+.login{
+    padding-top: 300px;
+    max-width: 200px;
+    margin: auto;
+}
+
+.hidden{
+    display: none;
+}
+
+.mention{
+    background-color: #b8000f !important;
+    color: white;
+}
