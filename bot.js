@@ -65,12 +65,10 @@ exports.bot = function (message, io) {
 
         } else if(messageArray[2]==="note" && messageArray[3]!=="list"){
             let title = message.substring(message.indexOf("note")+5);
-            console.log(title);
             botMessage.text = JSON.stringify(
                 notes.filter(note => {
                 return note.title === title;
             }));
-            console.log(message.text);
             io.emit('chat message', botMessage);
             botMessage.text = `Note search`;
             io.emit('chat message', botMessage);
@@ -80,14 +78,21 @@ exports.bot = function (message, io) {
             title:"",
             body:""
         };
-        note.title = message.substring(message.indexOf("title")+7, message.indexOf("body")-2);
+        note.title = message.substring(message.indexOf("title")+7, message.indexOf("body")-1);
         note.body = message.substring(message.indexOf("body")+6);
-        console.log(note);
         notes.push(note);
         botMessage.text = `Note: "${note.title}" successfully saved`;
         io.emit('chat message', botMessage);
 
-    } else if(messageArray.indexOf("#@)₴?$0")>-1){
+    } else if(messageArray[1]==="Delete"){
+        let title = message.substring(message.indexOf("note")+5);
+        note = notes.filter(note => {
+                return note.title === title;
+        });
+        notes.splice(note[0], 1);
+        botMessage.text = `Note: "${note[0].title}" deleted`;
+        io.emit('chat message', botMessage);
+    }else if(messageArray.indexOf("#@)₴?$0")>-1){
         let AdviceRequest = BotRequestFactory.create("advice", message);
         options.uri = AdviceRequest.url;
         rp(options)
