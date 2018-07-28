@@ -1,51 +1,39 @@
 const rp = require('request-promise');
 const apiKeyWeather = 'd006883d2ab0b24253d4cfe0e5d9d237';
 const apiKeyMoney = 'Dex5nDqb4PN8jcSN6czcPMdrhgTVnd';
-let notes = [];
-exports.bot = function (message, io) {
 
-    let botResponse = "";
+let notes = [];
+
+exports.bot = function (message, io) {
+    let messageArray = parser(message);
     let botMessage = {
         name:"@bot",
         text:""
     };
-
-    let messageArray = parser(message);
+    let options = {
+        uri: "",
+        json: true
+    };
 
     if(messageArray[1]==="What"){
-        let city = message.substring(message.indexOf("in")+3, message.indexOf("?"));
-        let day = message.substring(message.indexOf("weather")+8, message.indexOf("in"));
-        let urlWeather = `http://api.openweathermap.org/data/2.5/weather?q=${city}&units=metric&appid=${apiKeyWeather}`;
-        let options = {
-            uri: urlWeather,
-            json: true
-        };
+        let weatherRequest = BotRequestFactory.create("weather", message);
+        options.uri = weatherRequest.url;
         rp(options)
             .then(function (res) {
-                botResponse = `The weather is ${res.weather[0].main} in  ${res.name} ${day}, it's ${res.main.temp} degrees `;
-                botMessage.text = botResponse;
+                botMessage.text = `The weather is ${res.weather[0].main} in  ${res.name} ${weatherRequest.day}, it's ${res.main.temp} degrees `;
             })
             .then(()=>{
-                console.log(botMessage);
                 io.emit('chat message',  botMessage);
             })
             .catch(function (err) {
                 console.log(err);
             });
-    }
-    if(messageArray[1]==="Convert"){
-        let from = messageArray[3];
-        let to = messageArray[5];
-        let amount = messageArray[2];
-        let urlMoney = `https://www.amdoren.com/api/currency.php?api_key=${apiKeyMoney}&from=${from}&to=${to}&amount=${amount}`;
-        let options = {
-            uri: urlMoney,
-            json: true
-        };
+    }else if(messageArray[1]==="Convert"){
+        let moneyRequest = BotRequestFactory.create("money", messageArray);
+        options.uri = moneyRequest.url;
         rp(options)
             .then(function (res) {
-                botResponse = res.amount;
-                botMessage.text = `${botResponse} ${to}`;
+                botMessage.text = `${moneyRequest.amount} ${moneyRequest.from} = ${res.amount} ${moneyRequest.to}`;
             })
             .then(()=> {
                 io.emit('chat message', botMessage);
@@ -53,18 +41,13 @@ exports.bot = function (message, io) {
             .catch(function (err) {
                 console.log(err);
             });
-    }
-    if(messageArray[1]==="Show"){
+    }else if(messageArray[1]==="Show"){
         if(messageArray[2]==="quote"){
-            let urlQuote = `http://quotesondesign.com/wp-json/posts?filter[orderby]=rand&filter[posts_per_page]=1`;
-            let options = {
-                uri: urlQuote,
-                json: true
-            };
+            let QuoteRequest = BotRequestFactory.create("quote", message);
+            options.uri = QuoteRequest.url;
             rp(options)
                 .then(function (res) {
-                    botResponse = `${res[0].content}${res[0].title}`;
-                    botMessage.text = botResponse;
+                    botMessage.text = `${res[0].content}${res[0].title}`;
                 })
                 .then(()=> {
                     io.emit('chat message', botMessage);
@@ -78,8 +61,8 @@ exports.bot = function (message, io) {
             botMessage.text = JSON.stringify(notes);
             io.emit('chat message', botMessage);
         }
-    }
-    if(messageArray[1]==="Save"){
+
+    } else if(messageArray[1]==="Save"){
         let note = {
             title:"",
             body:""
@@ -89,19 +72,13 @@ exports.bot = function (message, io) {
         notes.push(note);
         botMessage.text = `Note: "${note.title}" successfully saved`;
         io.emit('chat message', botMessage);
-    }
 
-
-    if(messageArray.indexOf("#@)₴?$0")>-1){
-        let urlAdvice = `http://api.adviceslip.com/advice`;
-        let options = {
-            uri: urlAdvice,
-            json: true
-        };
+    } else if(messageArray.indexOf("#@)₴?$0")>-1){
+        let AdviceRequest = BotRequestFactory.create("advice", message);
+        options.uri = AdviceRequest.url;
         rp(options)
             .then(function (res) {
-                botResponse = res.slip.advice;
-                botMessage.text = botResponse;
+               botMessage.text = res.slip.advice;
             })
             .then(()=> {
                 io.emit('chat message', botMessage);
@@ -114,4 +91,47 @@ exports.bot = function (message, io) {
 
 function parser(message) {
     return message.substring(message.indexOf("@bot")).split(" ");
+}
+//Implementation of factory
+
+class BotRequestFactory{
+    static create(type, message){
+        if(type === 'weather'){
+            return new WeatherRequest(message)
+        }else if(type === 'money'){
+            return new MoneyRequest(message)
+        }else if(type === 'quote'){
+            return new QuoteRequest(message)
+        }else if(type === 'advice'){
+            return new AdviceRequest(message)
+        }
+    }
+}
+class WeatherRequest {
+    constructor (message) {
+        this.day = message.substring(message.indexOf("weather")+8, message.indexOf("in"));
+        let city = message.substring(message.indexOf("in")+3, message.indexOf("?"));
+        this.url = `http://api.openweathermap.org/data/2.5/weather?q=${city}&units=metric&appid=${apiKeyWeather}`;
+    }
+}
+
+class MoneyRequest {
+    constructor (message) {
+        this.from = message[3];
+        this.to = message[5];
+        this.amount = message[2];
+        this.url = `https://www.amdoren.com/api/currency.php?api_key=${apiKeyMoney}&from=${this.from}&to=${this.to}&amount=${this.amount}`;
+    }
+}
+
+class QuoteRequest {
+    constructor (message) {
+        this.url = `http://quotesondesign.com/wp-json/posts?filter[orderby]=rand&filter[posts_per_page]=1`;
+    }
+}
+
+class AdviceRequest {
+    constructor (message) {
+        this.url = `http://api.adviceslip.com/advice`;
+    }
 }
