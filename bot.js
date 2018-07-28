@@ -22,12 +22,13 @@ exports.bot = function (message, io) {
             .then(function (res) {
                 botMessage.text = `The weather is ${res.weather[0].main} in  ${res.name} ${weatherRequest.day}, it's ${res.main.temp} degrees `;
             })
+            .catch(function (err) {
+                botMessage.text = `${err.body.message}`;
+            })
             .then(()=>{
                 io.emit('chat message',  botMessage);
             })
-            .catch(function (err) {
-                console.log(err);
-            });
+
     }else if(messageArray[1]==="Convert"){
         let moneyRequest = BotRequestFactory.create("money", messageArray);
         options.uri = moneyRequest.url;
@@ -55,20 +56,33 @@ exports.bot = function (message, io) {
                 .catch(function (err) {
                     console.log(err);
                 });
+
         }else if(messageArray[2]==="note" && messageArray[3]==="list"){
             botMessage.text = "Notes list";
             io.emit('chat message', botMessage);
             botMessage.text = JSON.stringify(notes);
             io.emit('chat message', botMessage);
-        }
 
+        } else if(messageArray[2]==="note" && messageArray[3]!=="list"){
+            let title = message.substring(message.indexOf("note")+5);
+            console.log(title);
+            botMessage.text = JSON.stringify(
+                notes.filter(note => {
+                return note.title === title;
+            }));
+            console.log(message.text);
+            io.emit('chat message', botMessage);
+            botMessage.text = `Note search`;
+            io.emit('chat message', botMessage);
+        }
     } else if(messageArray[1]==="Save"){
         let note = {
             title:"",
             body:""
         };
         note.title = message.substring(message.indexOf("title")+7, message.indexOf("body")-2);
-        note.body = message.substring(message.indexOf("body")+5);
+        note.body = message.substring(message.indexOf("body")+6);
+        console.log(note);
         notes.push(note);
         botMessage.text = `Note: "${note.title}" successfully saved`;
         io.emit('chat message', botMessage);
@@ -86,14 +100,26 @@ exports.bot = function (message, io) {
             .catch(function (err) {
                 console.log(err);
             });
+    } else if(messageArray[1]==="Help"){
+        botMessage.text = "1.What the weather 'day' in 'city'?\n" +
+            "2.Convert 'amount' 'currency' to 'currency', where currency in format like USD, EUR and so on\n" +
+            "3.Save note title: 'title', body: 'body'\n" +
+            "4.Show note list\n" +
+            "5.'question' 'space' #@)₴?$0\n" +
+            "6.Show quote";
+        io.emit('chat message', botMessage);
+    }else if(botMessage.text === ""){
+        botMessage.text = "No such command or wrong format. Use @+bot Help to getinformation about commands";
+        io.emit('chat message', botMessage);
     }
 };
-
+//pure function
 function parser(message) {
     return message.substring(message.indexOf("@bot")).split(" ");
 }
-//Implementation of factory
 
+
+//Implementation of factory
 class BotRequestFactory{
     static create(type, message){
         if(type === 'weather'){

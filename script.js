@@ -83,7 +83,7 @@ function main() {
 
     function appendMessage(msg) {
         let li = document.createElement('li');
-        let el = new Proxy(li, validator);
+        let el = new Proxy(li, validator); //usage of proxy
         el.innerHTML = msg;
         messages.appendChild(li);
     }
@@ -126,7 +126,6 @@ function setOnline() {
         socket.emit('updateUser', user,status);
         socket.on("users", function (user) {
             users.innerHTML = '';
-            console.log(user);
             for(let i in user){
                 if(user.hasOwnProperty(i)){
                     let el = document.createElement('li');
@@ -156,7 +155,7 @@ let validator = {
             if(isMentioned(value.text, userNickname)){
                 obj.classList.add("mention");
             }
-            if(isBotCommand(value.text)){
+            if(isBotCommand(value.text) && userNickname===value.name){
                 socket.emit('bot message', value.text);
             }
         }
