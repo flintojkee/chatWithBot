@@ -12,6 +12,8 @@ function main() {
     const text = document.getElementById('text');
     const textSubmit = document.getElementById('textSubmit');
     let typing = document.createElement('span');
+    let isTyping = false;
+
     userHeader.innerText = "Name: "+userName+", NickName: "+userNickname;
 
     textSubmit.onclick = function () {
@@ -56,18 +58,6 @@ function main() {
         appendMessage(msg);
     });
 
-    function appendMessage(msg) {
-        let li = document.createElement('li');
-        let el = new Proxy(li, validator);
-        el.innerHTML = msg;
-        messages.appendChild(li);
-    }
-
-    let isTyping = false;
-    text.onkeypress = function () {
-        socket.emit('typing', userNickname);
-    };
-
     socket.on('typing', (userNickname) =>{
         if(!isTyping){
             typing.innerHTML = userNickname+" is typing... ";
@@ -81,9 +71,24 @@ function main() {
         isTyping = false;
     });
 
+    text.onkeypress = function () {
+        socket.emit('typing', userNickname);
+    };
+    text.addEventListener("keyup", function(e) {
+        if(e.keyCode === 13 && !e.shiftKey) {
+            e.preventDefault();
+            textSubmit.click();
+        }
+    });
+
+    function appendMessage(msg) {
+        let li = document.createElement('li');
+        let el = new Proxy(li, validator);
+        el.innerHTML = msg;
+        messages.appendChild(li);
+    }
+
 }
-
-
 
 function login() {
     let nameInput = document.getElementById('name-input');
